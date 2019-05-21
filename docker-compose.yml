@@ -1,0 +1,55 @@
+version: "3.3"
+
+# make sure that docker machine has enough memory to run the cluster.
+# setting it up to 4GB seems to work.
+
+services:
+  cassandra-seed:
+    container_name: cassandra-seed
+    image: cassandra:3.11
+    ports:
+      - "9042:9042"   # Native transport
+      - "7199:7199"   # JMX
+      - "9160:9160"   # Thrift clients
+    volumes: 
+      - cassandra_data_one:/var/lib/cassandra
+    networks: 
+      - cassandra_net
+
+  cassandra-node-1:
+    image: cassandra:3.11
+    command: /bin/bash -c "echo 'Waiting for seed node' && sleep 30 && /docker-entrypoint.sh cassandra -f"
+    environment:
+      - "CASSANDRA_SEEDS=cassandra-seed"
+    depends_on:
+      - cassandra-seed
+    links: 
+      - cassandra-seed:cassandra
+    volumes: 
+      - cassandra_data_two:/var/lib/cassandra
+    networks: 
+      - cassandra_net
+
+  # you cannot have multiple nodes join the cluster at the same time when
+  # cassandra.consistent.rangemovement is true so we further delay it to give it time to stabilize
+  cassandra-node-2:
+    image: cassandra:3.11
+    command: /bin/bash -c "echo 'Waiting for seed node' && sleep 80 && /docker-entrypoint.sh cassandra -f"
+    environment:
+      - "CASSANDRA_SEEDS=cassandra-seed"
+    depends_on:
+      - cassandra-seed
+    links: 
+      - cassandra-seed:cassandra
+    volumes: 
+      - cassandra_data_three:/var/lib/cassandra
+    networks: 
+      - cassandra_net
+
+volumes: 
+  cassandra_data_one:
+  cassandra_data_two:
+  cassandra_data_three:
+
+networks:
+  cassandra_net:

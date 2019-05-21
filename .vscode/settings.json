@@ -1,0 +1,6 @@
+{
+    "python.pythonPath": "/Users/pooyaharatian/.local/share/virtualenvs/code-kbcNUpXX",
+    "python.linting.pylintEnabled": false,
+    "python.linting.pep8Enabled": true,
+    "python.linting.enabled": true
+}
